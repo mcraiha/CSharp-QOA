@@ -416,6 +416,8 @@ public sealed class QOA
 		uint samples    = (uint)((frame_header >> 16) & 0x00ffff);
 		uint frame_size = (uint)((frame_header      ) & 0x00ffff);
 
+		Console.WriteLine($"Channels: {channels} Samplerate: {samplerate} Samples: {samples} Frame size: {frame_size}");
+
 		uint data_size = frame_size - 8 - QOA_LMS_LEN * 4 * channels;
 		uint num_slices = data_size / 8;
 		uint max_total_samples = num_slices * QOA_SLICE_LEN;
@@ -466,6 +468,8 @@ public sealed class QOA
 					int dequantized = qoa_dequant_tab[scalefactor, quantized];
 					int reconstructed = qoa_clamp_s16(predicted + dequantized);
 					
+					//Console.WriteLine($"si: {si}");
+
 					decodedOutput[(int)si] = (short)reconstructed;
 					slice <<= 3;
 
@@ -486,17 +490,25 @@ public sealed class QOA
 		short[] sample_data = new short[total_samples];
 
 		uint sample_index = 0;
-		uint frame_size = 0;
 
 		/* Decode all frames */
 		do 
 		{
-			Span<short> decodedOutputSpan = new Span<short>(sample_data, (int)(sample_index * qoa.channels), (int)(QOA_SLICE_LEN * qoa.channels));
+			int samplesPerFrame = (int)(QOA_SLICES_PER_FRAME * QOA_SLICE_LEN * qoa.channels);
+			if (samplesPerFrame < total_samples)
+			{
+				total_samples -= samplesPerFrame;
+			}
+			else
+			{
+				samplesPerFrame = total_samples;
+			}
+			Span<short> decodedOutputSpan = new Span<short>(sample_data, (int)(sample_index * qoa.channels), samplesPerFrame);
 			qoa_decode_frame(inputStream, qoa, decodedOutputSpan, out uint frame_len);
 
 			sample_index += frame_len;
 		} 
-		while (frame_size > 0 && sample_index < qoa.samples);
+		while (sample_index < qoa.samples);
 
 		qoa.samples = sample_index;
 		return sample_data;
@@ -531,7 +543,7 @@ public sealed class QOA
 			writer.Write((short)1); // Type of format (PCM integer)
 			writer.Write(channels); // Number of Channels
 			writer.Write(samplerate); // Sample Rate
-			writer.Write(channels * samplerate * bits_per_sample / 8); // Bytes per second
+			writer.Write((uint)(channels * samplerate * bits_per_sample / 8)); // Bytes per second
 			writer.Write((short)(channels * bits_per_sample / 8)); // Bytes per block
 			writer.Write(bits_per_sample); // Bits per sample
 			writer.Write("data"u8); //"data" chunk header. Marks the beginning of the data section.    

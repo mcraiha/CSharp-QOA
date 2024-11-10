@@ -374,7 +374,7 @@ public sealed class QOA
 
 		if ((file_header >> 32) != QOA_MAGIC)
 		{
-			throw new Exception("");
+			throw new Exception($"FourCC should be '{QOA_MAGIC:X8}' but it is '{(file_header >> 32):X8}'");
 		}
 
 		QOA_Desc qoa = new QOA_Desc();

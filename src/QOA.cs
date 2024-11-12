@@ -516,6 +516,16 @@ public sealed class QOA
 	/// <param name="outputSteam">Output stream (WAV)</param>
 	public void DecodeToWav(Stream inputStream, Stream outputSteam)
 	{
+		if (!inputStream.CanRead)
+		{
+			throw new IOException("Input stream must be readable!");
+		}
+
+		if (!outputSteam.CanWrite)
+		{
+			throw new IOException("Output stream must be writable!");
+		}
+
 		short[] sampleData = qoa_decode(inputStream, out QOA_Desc qoa);
 		WriteWav(outputSteam, sampleData, qoa);
 	}

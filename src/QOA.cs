@@ -150,6 +150,11 @@ public sealed class QOA
 		return v;
 	}
 
+	/// <summary>
+	/// Read 8 bytes as ulong
+	/// </summary>
+	/// <param name="stream">Stream for reading</param>
+	/// <returns>ulong</returns>
 	static ulong qoa_read_u64(Stream stream)
 	{
 		Span<byte> bytes = stackalloc byte[8];
@@ -399,11 +404,6 @@ public sealed class QOA
 	{
 		frame_len = 0;
 
-		/*if (size < 8 + QOA_LMS_LEN * 4 * qoa.channels)
-		{
-			throw new Exception();
-		}*/
-
 		/* Read and verify the frame header */
 		ulong frame_header = qoa_read_u64(inputStream);
 		uint channels   = (uint)((frame_header >> 56) & 0x0000ff);
@@ -509,6 +509,11 @@ public sealed class QOA
 		return sample_data;
 	}
 
+	/// <summary>
+	/// Decode QOA input to 16 bit WAV
+	/// </summary>
+	/// <param name="inputStream">Input stream (QOA)</param>
+	/// <param name="outputSteam">Output stream (WAV)</param>
 	public void DecodeToWav(Stream inputStream, Stream outputSteam)
 	{
 		short[] sampleData = qoa_decode(inputStream, out QOA_Desc qoa);

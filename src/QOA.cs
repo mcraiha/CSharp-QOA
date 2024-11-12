@@ -361,13 +361,8 @@ public sealed class QOA
 		return QOA_FRAME_SIZE(qoa.channels, QOA_SLICES_PER_FRAME);
 	}
 
-	public QOA_Desc qoa_decode_header(Stream inputStream, int size) 
+	public QOA_Desc qoa_decode_header(Stream inputStream) 
 	{
-		/*if (size < QOA_MIN_FILESIZE)
-		{
-			throw new Exception("");
-		}*/
-
 		/* Read the file header, verify the magic number ('qoaf') and read the 
 		total number of samples. */
 		ulong file_header = qoa_read_u64(inputStream);
@@ -481,9 +476,9 @@ public sealed class QOA
 		frame_len = samples;
 	}
 
-	public short[] qoa_decode(Stream inputStream, int size, out QOA_Desc qoa)
+	public short[] qoa_decode(Stream inputStream, out QOA_Desc qoa)
 	{
-		qoa = qoa_decode_header(inputStream, size);
+		qoa = qoa_decode_header(inputStream);
 
 		/* Calculate the required size of the sample buffer and allocate */
 		int total_samples = (int)(qoa.samples * qoa.channels);
@@ -516,13 +511,13 @@ public sealed class QOA
 
 	public void DecodeToWav(Stream inputStream, Stream outputSteam)
 	{
-		short[] sampleData = qoa_decode(inputStream, 0, out QOA_Desc qoa);
+		short[] sampleData = qoa_decode(inputStream, out QOA_Desc qoa);
 		WriteWav(outputSteam, sampleData, qoa);
 	}
 
 	public string DecodeHeaderToText(Stream inputStream)
 	{
-		QOA_Desc header = qoa_decode_header(inputStream, 0);
+		QOA_Desc header = qoa_decode_header(inputStream);
 		return $"Channels: {header.channels} samplerate: {header.samplerate} total samples: {header.samples}";
 	}
 

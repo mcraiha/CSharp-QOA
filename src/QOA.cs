@@ -16,6 +16,7 @@ public struct QOA_Desc
 	public uint channels;
 	public uint samplerate;
 	public uint samples;
+
 	public QOA_LMS[] lms = new QOA_LMS[QOA.QOA_MAX_CHANNELS] 
 	{ 
 		new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS()
@@ -24,6 +25,37 @@ public struct QOA_Desc
 	public QOA_Desc()
 	{
 
+	}
+
+	public QOA_Desc(uint channels, uint samplerate, uint samples)
+	{
+		this.channels = channels;
+		this.samplerate = samplerate;
+		this.samples = samples;
+	}
+
+	public void VerifyValues()
+	{
+		if (samples == 0) 
+		{
+			throw new Exception("Cannot process 0 samples!");
+		}
+		else if (samplerate == 0)
+		{
+			throw new Exception("Samplerate 0 is incorrect!");
+		}
+		else if (samplerate > 0xffffff)
+		{
+			throw new Exception($"Samplerate is too high ({samplerate}), max is {0xffffff}!");
+		}
+		else if (channels == 0)
+		{
+			throw new Exception("Cannot process 0 channels!");
+		}
+		else if (channels > QOA.QOA_MAX_CHANNELS)
+		{
+			throw new Exception($"Channel count is too high ({channels}), max is {QOA.QOA_MAX_CHANNELS}!");
+		}
 	}
 }
 
@@ -274,6 +306,7 @@ public sealed class QOA
 							lms.weights[2] * lms.weights[2] + 
 							lms.weights[3] * lms.weights[3]
 						) >> 18) - 0x8ff;
+
 						if (weights_penalty < 0)
 						{
 							weights_penalty = 0;
@@ -316,20 +349,10 @@ public sealed class QOA
 		}
 	}
 
-	public void qoa_encode(Stream outputStream, short[] sample_data, QOA_Desc qoa, uint out_len) 
+	public void qoa_encode(Stream outputStream, short[] sample_data, QOA_Desc qoa) 
 	{
-		if (qoa.samples == 0 || qoa.samplerate == 0 || qoa.samplerate > 0xffffff || qoa.channels == 0 || qoa.channels > QOA_MAX_CHANNELS) 
-		{
-			throw new Exception("");
-		}
-
-		/* Calculate the encoded size and allocate */
-		uint num_frames = (qoa.samples + QOA_FRAME_LEN-1) / QOA_FRAME_LEN;
-		uint num_slices = (qoa.samples + QOA_SLICE_LEN-1) / QOA_SLICE_LEN;
-		uint encoded_size = 8 +                    /* 8 byte file header */
-			num_frames * 8 +                               /* 8 byte frame headers */
-			num_frames * QOA_LMS_LEN * 4 * qoa.channels + /* 4 * 4 bytes lms state per channel */
-			num_slices * 8 * qoa.channels;                /* 8 byte slices */
+		// Verify values
+		qoa.VerifyValues();
 
 		for (uint c = 0; c < qoa.channels; c++) 
 		{
@@ -347,7 +370,6 @@ public sealed class QOA
 				qoa.lms[c].history[i] = 0;
 			}
 		}
-
 
 		/* Encode the header and go through all frames */
 		qoa_encode_header(qoa, outputStream);
@@ -510,10 +532,32 @@ public sealed class QOA
 	}
 
 	/// <summary>
+	/// Encode WAV input to QOA
+	/// </summary>
+	/// <param name="inputStream">Input stream (WAV)</param>
+	/// <param name="outputSteam">Output stream (QOA)</param>
+	/// <exception cref="IOException">If streams have issues</exception>
+	public void EncodeWAVToQOA(Stream inputStream, Stream outputSteam)
+	{
+		if (!inputStream.CanRead)
+		{
+			throw new IOException("Input stream must be readable!");
+		}
+
+		if (!outputSteam.CanWrite)
+		{
+			throw new IOException("Output stream must be writable!");
+		}
+
+		// Read needed data from WAV file
+	}
+
+	/// <summary>
 	/// Decode QOA input to 16 bit WAV
 	/// </summary>
 	/// <param name="inputStream">Input stream (QOA)</param>
 	/// <param name="outputSteam">Output stream (WAV)</param>
+	/// <exception cref="IOException">If streams have issues</exception>
 	public void DecodeToWav(Stream inputStream, Stream outputSteam)
 	{
 		if (!inputStream.CanRead)
@@ -527,42 +571,12 @@ public sealed class QOA
 		}
 
 		short[] sampleData = qoa_decode(inputStream, out QOA_Desc qoa);
-		WriteWav(outputSteam, sampleData, qoa);
+		WavHelper.Write16bitWav(outputSteam, sampleData, qoa.samples, qoa.channels, qoa.samplerate);
 	}
 
 	public string DecodeHeaderToText(Stream inputStream)
 	{
 		QOA_Desc header = qoa_decode_header(inputStream);
 		return $"Channels: {header.channels} samplerate: {header.samplerate} total samples: {header.samples}";
-	}
-
-	private static void WriteWav(Stream outputSteam, short[] sampleData, QOA_Desc desc)
-	{
-		uint data_size = desc.samples * desc.channels * sizeof(short);
-		uint samplerate = desc.samplerate;
-		const short bits_per_sample = 16;
-		short channels = (short)desc.channels;
-		using (var writer = new BinaryWriter(outputSteam))
-		{
-			// All data will be written in little endian format
-			writer.Write("RIFF"u8); // RIFF marker
-			writer.Write(data_size + 44 - 8); // File size 
-			writer.Write("WAVE"u8); // File Type Header
-			writer.Write("fmt "u8); // Mark the format section
-			writer.Write((uint)16); // Chunk size. Always 16 with these WAV files 
-			writer.Write((short)1); // Type of format (PCM integer)
-			writer.Write(channels); // Number of Channels
-			writer.Write(samplerate); // Sample Rate
-			writer.Write((uint)(channels * samplerate * bits_per_sample / 8)); // Bytes per second
-			writer.Write((short)(channels * bits_per_sample / 8)); // Bytes per block
-			writer.Write(bits_per_sample); // Bits per sample
-			writer.Write("data"u8); //"data" chunk header. Marks the beginning of the data section.    
-			writer.Write(data_size); // Size of the data
-
-			foreach (short val in sampleData)
-			{
-				writer.Write(BitConverter.GetBytes(val));
-			}
-		}
 	}
 }

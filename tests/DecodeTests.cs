@@ -10,7 +10,7 @@ public class DecodeTests
 	}
 
 	[Test, Description("Decode an existing mono 48 000 Hz QOA audio file")]
-	public void Test1()
+	public void Decode48000HzMonoQOA()
 	{
 		// Arrange
 		string input_WAV_Filename = "samples/car_trunk_close.qoa.wav";

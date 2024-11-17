@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="samples/car_trunk_close.wav" CopyToOutputDirectory="PreserveNewest" />
     <None Update="samples/car_trunk_close.qoa" CopyToOutputDirectory="PreserveNewest" />
     <None Update="samples/car_trunk_close.qoa.wav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

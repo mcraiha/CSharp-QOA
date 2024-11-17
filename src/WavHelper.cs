@@ -35,7 +35,7 @@ public static class WavHelper
 		}
 	}
 
-	public static short[] ReadWav(Stream inputStream, out QOA_Desc desc)
+	public static short[] ReadWav(Stream inputStream, out (uint channels, uint samplerate, uint samples) specs)
 	{		
 		ReadOnlySpan<byte> wantedWave = "WAVE"u8;
 		bool waveFound = SeekNext(inputStream, wantedWave);
@@ -62,6 +62,12 @@ public static class WavHelper
 		using (var reader = new BinaryReader(inputStream, Encoding.UTF8, leaveOpen: true))
 		{
 			audioFormat = reader.ReadUInt16();
+
+			if (audioFormat != 1)
+			{
+				throw new ArgumentException($"Audio format: {audioFormat} is not supported!");
+			}
+
 			channels = reader.ReadUInt16();
 			sampleRate = reader.ReadUInt32();
 			// Ignore byte rate and block align
@@ -81,7 +87,7 @@ public static class WavHelper
 		{
 			uint dataSizeInBytes = reader.ReadUInt32();
 			uint samples = (uint)(dataSizeInBytes / (channels * (bitsPerSample/8)));
-			desc = new QOA_Desc(channels, sampleRate, samples);
+			specs = new (channels, sampleRate, samples);
 
 			short[] returnArray = new short[dataSizeInBytes / 2];
 

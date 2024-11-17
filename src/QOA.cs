@@ -27,6 +27,13 @@ public struct QOA_Desc
 
 	}
 
+	public QOA_Desc((uint channels, uint samplerate, uint samples) tuple)
+	{
+		this.channels = tuple.channels;
+		this.samplerate = tuple.samplerate;
+		this.samples = tuple.samples;
+	}
+
 	public QOA_Desc(uint channels, uint samplerate, uint samples)
 	{
 		this.channels = channels;

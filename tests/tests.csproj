@@ -29,6 +29,8 @@
     <None Update="samples/car_trunk_close.wav" CopyToOutputDirectory="PreserveNewest" />
     <None Update="samples/car_trunk_close.qoa" CopyToOutputDirectory="PreserveNewest" />
     <None Update="samples/car_trunk_close.qoa.wav" CopyToOutputDirectory="PreserveNewest" />
+
+    <None Update="samples/sting_xp_level_up_orch_01.wav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

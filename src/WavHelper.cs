@@ -3,10 +3,18 @@ using System.Text;
 namespace QOA;
 
 /// <summary>
-/// Static helper class for reading and writing Wav data
+/// Static helper class for reading and writing WAV data
 /// </summary>
 public static class WavHelper
 {
+	/// <summary>
+	/// Write sample data to stream in WAV format
+	/// </summary>
+	/// <param name="outputSteam">Stream for writing</param>
+	/// <param name="sampleData">All the sample data that will be written</param>
+	/// <param name="samples">How many samples are there per channel</param>
+	/// <param name="channels">How many channels are there</param>
+	/// <param name="samplerate">Samplerate</param>
 	public static void Write16bitWav(Stream outputSteam, short[] sampleData, uint samples, uint channels, uint samplerate)
 	{
 		uint data_size = samples * channels * sizeof(short);
@@ -35,6 +43,13 @@ public static class WavHelper
 		}
 	}
 
+	/// <summary>
+	/// Read data from WAV format stream
+	/// </summary>
+	/// <param name="inputStream">Input stream that will be read</param>
+	/// <param name="specs">Output of WAV file specs as tuple. Audio channels count, samplerate and samples per channel</param>
+	/// <returns>All samples as short array</returns>
+	/// <exception cref="ArgumentException"></exception>
 	public static short[] ReadWav(Stream inputStream, out (uint channels, uint samplerate, uint samples) specs)
 	{		
 		ReadOnlySpan<byte> wantedWave = "WAVE"u8;

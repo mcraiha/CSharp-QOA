@@ -2,6 +2,9 @@
 
 Managed .NET implementation of [QOA](https://github.com/phoboslab/qoa) (Quite OK Audio Format) written in C#
 
+## Build status
+![](https://github.com/mcraiha/CSharp-QOA/actions/workflows/dotnet.yml/badge.svg)
+
 ## Why?
 
 Because I needed this for my personal project

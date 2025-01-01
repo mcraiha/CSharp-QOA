@@ -9,6 +9,15 @@ public struct QOA_LMS
 	{
 
 	}
+
+	public QOA_LMS(QOA_LMS existing)
+	{
+		for (int i = 0; i < QOA.QOA_LMS_LEN; i++) 
+		{
+			history[i] = existing.history[i];
+			weights[i] = existing.weights[i];
+		}
+	}
 }
 
 public struct QOA_Desc
@@ -121,7 +130,7 @@ public sealed class QOA
 		{1536, -1536, 5120, -5120, 9216, -9216, 14336, -14336},
 	};
 
-	private static int qoa_lms_predict(QOA_LMS lms)
+	private static int qoa_lms_predict(ref QOA_LMS lms)
 	{
 		int prediction = 0;
 
@@ -133,7 +142,7 @@ public sealed class QOA
 		return prediction >> 13;
 	}
 
-	private static void qoa_lms_update(QOA_LMS lms, int sample, int residual)
+	private static void qoa_lms_update(ref QOA_LMS lms, int sample, int residual)
 	{
 		int delta = residual >> 4;
 
@@ -154,20 +163,27 @@ public sealed class QOA
 	{
 		int reciprocal = qoa_reciprocal_tab[scalefactor];
 		int n = (v * reciprocal + (1 << 15)) >> 16;
-		n = n + Sign(v) - Sign(v) - Sign(n) - Sign(n); /* round away from 0 */
+		n = n + (GreaterThanZero(v) - LesserThanZero(v)) - (GreaterThanZero(n) - LesserThanZero(n)); /* round away from 0 */
 		return n;
 	}
 
-	private static int Sign(int value)
+	private static int GreaterThanZero(int value)
 	{
-		if (value < 0)
-		{
-			return -1;
-		}
 		if (value > 0)
 		{
 			return 1;
 		}
+
+		return 0;
+	}
+
+	private static int LesserThanZero(int value)
+	{
+		if (value < 0)
+		{
+			return 1;
+		}
+
 		return 0;
 	}
 
@@ -268,7 +284,7 @@ public sealed class QOA
 			{
 				uint slice_len = (uint)qoa_clamp((int)QOA_SLICE_LEN, 0, (int)(frame_len - sample_index));
 				uint slice_start = sample_index * channels + c;
-				uint slice_end = (sample_index + slice_len) * channels + c;			
+				uint slice_end = (sample_index + slice_len) * channels + c;
 
 				/* Brute for search for the best scalefactor. Just go through all
 				16 scalefactors, encode all samples for the current slice and 
@@ -289,14 +305,14 @@ public sealed class QOA
 					/* We have to reset the LMS state to the last known good one
 					before trying each scalefactor, as each pass updates the LMS
 					state when encoding. */
-					QOA_LMS lms = qoa.lms[c];
+					QOA_LMS lms = new QOA_LMS(qoa.lms[c]);
 					ulong slice = (ulong)scalefactor;
 					ulong current_rank = 0;
 
 					for (uint si = slice_start; si < slice_end; si += channels) 
 					{
 						int sample = sample_data[(int)si];
-						int predicted = qoa_lms_predict(lms);
+						int predicted = qoa_lms_predict(ref lms);
 
 						int residual = sample - predicted;
 						int scaled = qoa_div(residual, scalefactor);
@@ -329,7 +345,7 @@ public sealed class QOA
 							break;
 						}
 
-						qoa_lms_update(lms, reconstructed, dequantized);
+						qoa_lms_update(ref lms, reconstructed, dequantized);
 						slice = (slice << 3) | (uint)quantized;
 					}
 
@@ -440,8 +456,6 @@ public sealed class QOA
 		uint samples    = (uint)((frame_header >> 16) & 0x00ffff);
 		uint frame_size = (uint)((frame_header      ) & 0x00ffff);
 
-		Console.WriteLine($"Channels: {channels} Samplerate: {samplerate} Samples: {samples} Frame size: {frame_size}");
-
 		uint data_size = frame_size - 8 - QOA_LMS_LEN * 4 * channels;
 		uint num_slices = data_size / 8;
 		uint max_total_samples = num_slices * QOA_SLICE_LEN;
@@ -487,17 +501,15 @@ public sealed class QOA
 
 				for (uint si = slice_start; si < slice_end; si += channels)
 				{
-					int predicted = qoa_lms_predict(qoa.lms[c]);
+					int predicted = qoa_lms_predict(ref qoa.lms[c]);
 					int quantized = (int)((slice >> 61) & 0x7);
 					int dequantized = qoa_dequant_tab[scalefactor, quantized];
 					int reconstructed = qoa_clamp_s16(predicted + dequantized);
-					
-					//Console.WriteLine($"si: {si}");
 
 					decodedOutput[(int)si] = (short)reconstructed;
 					slice <<= 3;
 
-					qoa_lms_update(qoa.lms[c], reconstructed, dequantized);
+					qoa_lms_update(ref qoa.lms[c], reconstructed, dequantized);
 				}
 			}
 		}
@@ -557,6 +569,9 @@ public sealed class QOA
 		}
 
 		// Read needed data from WAV file
+		short[] sampleData = WavHelper.ReadWav(inputStream, out (uint channels, uint samplerate, uint samples) specs);
+		QOA_Desc desc = new QOA_Desc(specs);
+		qoa_encode(outputSteam, sampleData, desc);
 	}
 
 	/// <summary>

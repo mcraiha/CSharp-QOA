@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Clitool decode/encode files
+clitool/*.wav
+clitool/*.qoa

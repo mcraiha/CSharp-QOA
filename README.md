@@ -9,6 +9,14 @@ Managed .NET implementation of [QOA](https://github.com/phoboslab/qoa) (Quite OK
 
 Because I needed this for my personal project
 
+## Content
+
+[src](src) folder contains the actual library source code to do QOA encoding/decoding
+
+[tests](tests) folder contains unit test cases
+
+[clitool](clitool) folder contains command-line tool source code for encoding/decoding QOA files
+
 ## License
 
 All the code is licensed under [MIT License](LICENSE) because that is the license QOA uses.

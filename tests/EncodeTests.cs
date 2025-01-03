@@ -1,4 +1,4 @@
-using QOA;
+using QOALib;
 
 namespace tests;
 
@@ -18,7 +18,7 @@ public class EncodeTests
 		string input_QOA_Filename = "samples/car_trunk_close.qoa";
 		byte[] expected = File.ReadAllBytes(input_QOA_Filename);
 
-		QOA.QOA qoa = new QOA.QOA();
+		QOA qoa = new QOA();
 
 		// Act
 		byte[]? actual = null;
@@ -44,7 +44,7 @@ public class EncodeTests
 		string input_QOA_Filename = "samples/sting_xp_level_up_orch_01.qoa";
 		byte[] expected = File.ReadAllBytes(input_QOA_Filename);
 
-		QOA.QOA qoa = new QOA.QOA();
+		QOA qoa = new QOA();
 
 		// Act
 		byte[]? actual = null;

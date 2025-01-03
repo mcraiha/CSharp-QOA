@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace QOA;
+namespace QOALib;
 
 /// <summary>
 /// Static helper class for reading and writing WAV data

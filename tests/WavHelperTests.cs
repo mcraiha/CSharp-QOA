@@ -1,4 +1,4 @@
-using QOA;
+using QOALib;
 
 namespace tests;
 

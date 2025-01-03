@@ -1,6 +1,6 @@
 using System.Buffers.Binary; // For BinaryPrimitives.ReverseEndianness
 
-namespace QOA;
+namespace QOALib;
 
 public struct QOA_LMS
 {

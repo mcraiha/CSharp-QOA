@@ -1,4 +1,4 @@
-using QOA;
+using QOALib;
 
 namespace tests;
 
@@ -18,7 +18,7 @@ public class DecodeTests
 
 		string input_QOA_Filename = "samples/car_trunk_close.qoa";
 
-		QOA.QOA qoa = new QOA.QOA();
+		QOA qoa = new QOA();
 
 		// Act
 		byte[]? actual = null;
@@ -44,7 +44,7 @@ public class DecodeTests
 
 		string input_QOA_Filename = "samples/sting_xp_level_up_orch_01.qoa";
 
-		QOA.QOA qoa = new QOA.QOA();
+		QOA qoa = new QOA();
 
 		// Act
 		byte[]? actual = null;
@@ -71,11 +71,11 @@ public class DecodeTests
 		byte[] incorrectBytes2 = new byte[] { 1, 2, 3, 4 };
 
 		// Act
-		bool checkResult1 = QOA.QOA.CheckFourCC(validBytes);
+		bool checkResult1 = QOA.CheckFourCC(validBytes);
 
-		bool checkResult2 = QOA.QOA.CheckFourCC(null!);
-		bool checkResult3 = QOA.QOA.CheckFourCC(incorrectBytes1);
-		bool checkResult4 = QOA.QOA.CheckFourCC(incorrectBytes2);
+		bool checkResult2 = QOA.CheckFourCC(null!);
+		bool checkResult3 = QOA.CheckFourCC(incorrectBytes1);
+		bool checkResult4 = QOA.CheckFourCC(incorrectBytes2);
 
 		// Assert
 		Assert.That(checkResult1, Is.True);

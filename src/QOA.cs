@@ -212,7 +212,7 @@ public sealed class QOA
 	/// </summary>
 	/// <param name="stream">Stream for reading</param>
 	/// <returns>ulong</returns>
-	static ulong qoa_read_u64(Stream stream)
+	private static ulong qoa_read_u64(Stream stream)
 	{
 		Span<byte> bytes = stackalloc byte[8];
 		stream.Read(bytes);

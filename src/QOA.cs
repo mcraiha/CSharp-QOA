@@ -1,3 +1,5 @@
+using System.Buffers.Binary; // For BinaryPrimitives.ReverseEndianness
+
 namespace QOA;
 
 public struct QOA_LMS
@@ -600,5 +602,20 @@ public sealed class QOA
 	{
 		QOA_Desc header = qoa_decode_header(inputStream);
 		return $"Channels: {header.channels} samplerate: {header.samplerate} total samples: {header.samples}";
+	}
+
+	/// <summary>
+	/// Check that four first bytes are equal to QOA FourCC
+	/// </summary>
+	/// <param name="bytes">Byte array</param>
+	/// <returns>True if they are equal; False otherwise</returns>
+	public static bool CheckFourCC(byte[] bytes)
+	{
+		if (bytes == null || bytes.Length < 4)
+		{
+			return false;
+		}
+
+		return BitConverter.ToUInt32(bytes, 0) == BinaryPrimitives.ReverseEndianness(QOA_MAGIC);
 	}
 }

@@ -2,16 +2,32 @@ using System.Buffers.Binary; // For BinaryPrimitives.ReverseEndianness
 
 namespace QOALib;
 
+/// <summary>
+/// Structure for QOA Least mean squares (LMS)
+/// </summary>
 public struct QOA_LMS
 {
+	/// <summary>
+	/// Four previous history points, most recent last
+	/// </summary>
 	public int[] history = new int[QOA.QOA_LMS_LEN];
+	/// <summary>
+	/// Four adjusting weights, most recent last
+	/// </summary>
 	public int[] weights = new int[QOA.QOA_LMS_LEN];
 
+	/// <summary>
+	/// Constructor without parameters
+	/// </summary>
 	public QOA_LMS()
 	{
 
 	}
 
+	/// <summary>
+	/// Copy constructor
+	/// </summary>
+	/// <param name="existing">Existing struct where values will be copied from</param>
 	public QOA_LMS(QOA_LMS existing)
 	{
 		for (int i = 0; i < QOA.QOA_LMS_LEN; i++) 
@@ -22,22 +38,46 @@ public struct QOA_LMS
 	}
 }
 
+/// <summary>
+/// Description of QOA data
+/// </summary>
 public struct QOA_Desc
 {
+	/// <summary>
+	/// How many channels
+	/// </summary>
 	public uint channels;
+
+	/// <summary>
+	/// Samplerate
+	/// </summary>
 	public uint samplerate;
+
+	/// <summary>
+	/// How many samples
+	/// </summary>
 	public uint samples;
 
+	/// <summary>
+	/// Least mean squares (LMS) for each channel (some channels might not be used)
+	/// </summary>
 	public QOA_LMS[] lms = new QOA_LMS[QOA.QOA_MAX_CHANNELS] 
 	{ 
 		new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS(), new QOA_LMS()
 	};
 
+	/// <summary>
+	/// Constructor without paramaters
+	/// </summary>
 	public QOA_Desc()
 	{
 
 	}
 
+	/// <summary>
+	/// Constructor with channels, samplerate and samples given with tuple
+	/// </summary>
+	/// <param name="tuple">Tuple that contains channels, samplerate and samples</param>
 	public QOA_Desc((uint channels, uint samplerate, uint samples) tuple)
 	{
 		this.channels = tuple.channels;
@@ -45,6 +85,12 @@ public struct QOA_Desc
 		this.samples = tuple.samples;
 	}
 
+	/// <summary>
+	/// Constructor with channels, samplerate and samples
+	/// </summary>
+	/// <param name="channels">Channels</param>
+	/// <param name="samplerate">Samplerate</param>
+	/// <param name="samples">Samples</param>
 	public QOA_Desc(uint channels, uint samplerate, uint samples)
 	{
 		this.channels = channels;
@@ -52,6 +98,10 @@ public struct QOA_Desc
 		this.samples = samples;
 	}
 
+	/// <summary>
+	/// Verify input values, e.g. samples/samplerate/channels cannot be 0
+	/// </summary>
+	/// <exception cref="Exception"></exception>
 	public void VerifyValues()
 	{
 		if (samples == 0) 
@@ -77,15 +127,26 @@ public struct QOA_Desc
 	}
 }
 
+/// <summary>
+/// Class that will be used to do all encoding/decoding
+/// </summary>
 public sealed class QOA
 {
 	private const int QOA_MIN_FILESIZE = 16;
+
+	/// <summary>
+	/// Max number of channels
+	/// </summary>
 	public const int QOA_MAX_CHANNELS = 8;
 
 	private const uint QOA_SLICE_LEN = 20;
 	private const int QOA_SLICES_PER_FRAME = 256;
 
 	private const uint QOA_FRAME_LEN = QOA_SLICES_PER_FRAME * QOA_SLICE_LEN;
+
+	/// <summary>
+	/// How long is Least mean squares (LMS) history
+	/// </summary>
 	public const int QOA_LMS_LEN = 4;
 	private const uint QOA_MAGIC = 0x716f6166; /* 'qoaf' */
 
@@ -237,11 +298,23 @@ public sealed class QOA
 		stream.Write(bytes);
 	}
 
+	/// <summary>
+	/// Encode header and write it to stream
+	/// </summary>
+	/// <param name="qoa">Given QOA_Desc</param>
+	/// <param name="stream">Output stream</param>
 	public void qoa_encode_header(QOA_Desc qoa, Stream stream) 
 	{
 		qoa_write_u64(((ulong)QOA_MAGIC << 32) | qoa.samples, stream);
 	}
 
+	/// <summary>
+	/// Encode one frame
+	/// </summary>
+	/// <param name="sample_data">Sample data</param>
+	/// <param name="qoa">Given QOA_Desc</param>
+	/// <param name="frame_len">Frame length</param>
+	/// <param name="outputStream">Output stream</param>
 	public void qoa_encode_frame(ReadOnlySpan<short> sample_data, QOA_Desc qoa, uint frame_len, Stream outputStream) 
 	{
 		uint channels = qoa.channels;
@@ -374,6 +447,12 @@ public sealed class QOA
 		}
 	}
 
+	/// <summary>
+	/// Encode all samples into QOA
+	/// </summary>
+	/// <param name="outputStream">Output stream</param>
+	/// <param name="sample_data">Sample data</param>
+	/// <param name="qoa">Given QOA_Desc</param>
 	public void qoa_encode(Stream outputStream, short[] sample_data, QOA_Desc qoa) 
 	{
 		// Verify values
@@ -413,6 +492,12 @@ public sealed class QOA
 		return QOA_FRAME_SIZE(qoa.channels, QOA_SLICES_PER_FRAME);
 	}
 
+	/// <summary>
+	/// Decode QOA header
+	/// </summary>
+	/// <param name="inputStream">Input stream (QOA data)</param>
+	/// <returns>QOA_Desc</returns>
+	/// <exception cref="Exception"></exception>
 	public QOA_Desc qoa_decode_header(Stream inputStream) 
 	{
 		/* Read the file header, verify the magic number ('qoaf') and read the 
@@ -447,6 +532,14 @@ public sealed class QOA
 		return qoa;
 	}
 
+	/// <summary>
+	/// Decode one QOA frame
+	/// </summary>
+	/// <param name="inputStream">Input stream (QOA data)</param>
+	/// <param name="qoa">QOA_Desc</param>
+	/// <param name="decodedOutput">Decoded samples output buffer</param>
+	/// <param name="frame_len">Lenght of decoded frame</param>
+	/// <exception cref="InvalidOperationException"></exception>
 	public void qoa_decode_frame(Stream inputStream, QOA_Desc qoa, Span<short> decodedOutput, out uint frame_len) 
 	{
 		frame_len = 0;
@@ -519,6 +612,12 @@ public sealed class QOA
 		frame_len = samples;
 	}
 
+	/// <summary>
+	/// Decode all samples from QOA data
+	/// </summary>
+	/// <param name="inputStream">Input stream (QOA data)</param>
+	/// <param name="qoa">QOA_Desc</param>
+	/// <returns>Samples as short array</returns>
 	public short[] qoa_decode(Stream inputStream, out QOA_Desc qoa)
 	{
 		qoa = qoa_decode_header(inputStream);
@@ -598,6 +697,11 @@ public sealed class QOA
 		WavHelper.Write16bitWav(outputSteam, sampleData, qoa.samples, qoa.channels, qoa.samplerate);
 	}
 
+	/// <summary>
+	/// Decode header to text (for debugging purposes)
+	/// </summary>
+	/// <param name="inputStream">Input stream (QOA data)</param>
+	/// <returns>String that contains channel count, samplerate and total amount of samples</returns>
 	public string DecodeHeaderToText(Stream inputStream)
 	{
 		QOA_Desc header = qoa_decode_header(inputStream);

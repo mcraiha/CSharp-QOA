@@ -17,6 +17,40 @@ Because I needed this for my personal project
 
 [clitool](clitool) folder contains command-line tool source code for encoding/decoding QOA files
 
+## How to use?
+
+If you want to decode .qoa file to .wav, then you can use following code
+
+```cs
+using QOALib;
+
+QOA qoa = new QOA();
+
+using (FileStream inputStream = File.OpenRead(inputQOAFilename))
+{
+    using (FileStream outputStream = File.Create(outputWAVFilename))
+    {
+        qoa.DecodeToWav(inputStream, outputStream);
+    }
+}
+```
+
+If you want to encode 16 bit .wav file to .qoa, then you can use following code
+
+```cs
+using QOALib;
+
+QOA qoa = new QOA();
+
+using (FileStream inputStream = File.OpenRead(inputWAVFilename))
+{
+    using (FileStream outputStream = File.Create(outputQOAFilename))
+    {
+        qoa.EncodeWAVToQOA(inputStream, outputStream);
+    }
+}
+```
+
 ## License
 
 All the code is licensed under [MIT License](LICENSE) because that is the license QOA uses.

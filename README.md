@@ -5,6 +5,9 @@ Managed .NET implementation of [QOA](https://github.com/phoboslab/qoa) (Quite OK
 ## Build status
 ![](https://github.com/mcraiha/CSharp-QOA/actions/workflows/dotnet.yml/badge.svg)
 
+## Nuget
+[![NuGet version (LibQOA)](https://img.shields.io/nuget/v/LibQOA.svg?style=flat-square)](https://www.nuget.org/packages/LibQOA/)
+
 ## Why?
 
 Because I needed this for my personal project

@@ -5,10 +5,12 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\src\qoa.csproj" />
+    <TrimmerRootAssembly Include="qoa" />
   </ItemGroup>
 
 </Project>

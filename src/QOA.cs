@@ -276,7 +276,7 @@ public sealed class QOA
 	private static ulong qoa_read_u64(Stream stream)
 	{
 		Span<byte> bytes = stackalloc byte[8];
-		stream.Read(bytes);
+		stream.ReadExactly(bytes);
 		return 
 			((ulong)(bytes[0]) << 56) | ((ulong)(bytes[1]) << 48) |
 			((ulong)(bytes[2]) << 40) | ((ulong)(bytes[3]) << 32) |

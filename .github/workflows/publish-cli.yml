@@ -1,0 +1,80 @@
+# This workflow will build AOT CLI for all supported systems
+
+name: .NET publish cli
+
+on:
+  push:
+     tags:
+      - cli-*
+  workflow_dispatch:
+
+jobs:
+  buildaots:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v6
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Publish Windows x64
+      run: dotnet publish -r win-x64 -c Release -o win-x64
+      working-directory: clitool
+      if: matrix.os == 'windows-latest'
+    - uses: actions/upload-artifact@v6
+      if: matrix.os == 'windows-latest'
+      with:
+        name: qoacli-win-x64
+        path: cli/win-x64
+        compression-level: 9 # maximum compression
+
+    - name: Publish Linux x64
+      run: dotnet publish -r linux-x64 -c Release -o linux-x64
+      working-directory: clitool
+      if: matrix.os == 'ubuntu-latest'
+    - uses: actions/upload-artifact@v6
+      if: matrix.os == 'ubuntu-latest'
+      with:
+        name: qoacli-linux-x64
+        path: cli/linux-x64
+        compression-level: 9 # maximum compression
+
+    - name: Publish Mac arm64
+      run: dotnet publish -r osx-arm64 -c Release -o osx-arm64
+      working-directory: clitool
+      if: matrix.os == 'macos-latest'
+    - uses: actions/upload-artifact@v6
+      if: matrix.os == 'macos-latest'
+      with:
+        name: qoacli-mac-arm64
+        path: cli/osx-arm64
+        compression-level: 9 # maximum compression
+
+  releaseartifacts:
+    runs-on: ubuntu-latest
+    needs: buildaots
+    steps:
+      - uses: actions/download-artifact@v8
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Zip win-x64
+        run: zip -9 -r ../qoacli-win-x64.zip .
+        working-directory: qoacli-win-x64
+      - name: Zip linux-x64
+        run: zip -9 -r ../qoacli-linux-x64.zip .
+        working-directory: qoacli-linux-x64
+      - name: Zip mac-arm64
+        run: zip -9 -r ../qoacli-mac-arm64.zip .
+        working-directory: qoacli-mac-arm64
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            qoacli-win-x64.zip
+            qoacli-linux-x64.zip
+            qoacli-mac-arm64.zip

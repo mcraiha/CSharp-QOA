@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 
 using QOALib;
 
@@ -11,6 +12,7 @@ internal class Program
 	{
 		if (args.Length == 0)
 		{
+			PrintVersion();
 			Console.WriteLine("More parameters are needed!");
 			Console.WriteLine();
 			Console.WriteLine("1. Get QOA info: input.qoa");
@@ -69,6 +71,11 @@ internal class Program
 		}
 
 		Console.WriteLine($"Wrote {outputFilename}");
+	}
+
+	private static void PrintVersion()
+	{
+		Console.WriteLine($"QOACli v{Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion}");
 	}
 
 	private static void DecodeHeader(string inputFilename)

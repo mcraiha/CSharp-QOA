@@ -3,9 +3,11 @@
 Managed .NET implementation of [QOA](https://github.com/phoboslab/qoa) (Quite OK Audio Format) written in C#
 
 ## Build status
+
 ![](https://github.com/mcraiha/CSharp-QOA/actions/workflows/dotnet.yml/badge.svg)
 
 ## Nuget
+
 [![NuGet version (LibQOA)](https://img.shields.io/nuget/v/LibQOA.svg?style=flat-square)](https://www.nuget.org/packages/LibQOA/)
 
 ## Why?
@@ -20,7 +22,7 @@ Because I needed this for my personal project
 
 [clitool](clitool) folder contains command-line tool source code for encoding/decoding QOA files
 
-## How to use?
+## How to use nuget / source code?
 
 If you want to decode .qoa file to .wav, then you can use following code
 
@@ -52,6 +54,23 @@ using (FileStream inputStream = File.OpenRead(inputWAVFilename))
         qoa.EncodeWAVToQOA(inputStream, outputStream);
     }
 }
+```
+
+## How to use CLI tool?
+
+If you want to get info about .qoa file, do
+```bash
+qoacli input.qoa
+```
+
+If you want to convert WAV to QOA (lossy operation)
+```bash
+qoacli input.wav output.qoa
+```
+
+If you want to convert QOA to WAV
+```bash
+qoacli input.qoa output.wav
 ```
 
 ## License

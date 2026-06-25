@@ -524,9 +524,9 @@ public sealed class QOA
 		qoa.channels   = (uint)((frame_header >> 56) & 0x0000ff);
 		qoa.samplerate = (uint)((frame_header >> 32) & 0xffffff);
 
-		if (qoa.channels == 0 || qoa.samples == 0 || qoa.samplerate == 0)
+		if (qoa.channels == 0 || qoa.samples == 0 || qoa.samplerate == 0 || qoa.channels > QOA_MAX_CHANNELS)
 		{
-			throw new Exception("");
+			throw new Exception("Incorrect channel amount, incorrect samples amount or incorrect samplerate");
 		}
 
 		return qoa;
@@ -551,21 +551,30 @@ public sealed class QOA
 		uint samples    = (uint)((frame_header >> 16) & 0x00ffff);
 		uint frame_size = (uint)((frame_header      ) & 0x00ffff);
 
-		uint data_size = frame_size - 8 - QOA_LMS_LEN * 4 * channels;
-		uint num_slices = data_size / 8;
-		uint max_total_samples = num_slices * QOA_SLICE_LEN;
+		uint header_size = 8 + QOA_LMS_LEN * 4 * channels;
+		uint data_size = frame_size - header_size;
+		uint max_total_slices = data_size / 8;
+		uint num_slices = (samples + QOA_SLICE_LEN - 1) / QOA_SLICE_LEN;
 
 		if (channels != qoa.channels)
 		{
 			throw new InvalidOperationException($"Channels counts do not match, frame says: {channels} channel(s) vs. header says {qoa.channels} channel(s)");
 		}
-		else if (samplerate != qoa.samplerate )
+		else if (samplerate != qoa.samplerate)
 		{
 			throw new InvalidOperationException($"Samplerate do not match, frame says: {samplerate} sample(s) vs. header says {qoa.samplerate} samples(s)");
 		}
-		else if (samples * channels > max_total_samples)
+		else if (frame_size < header_size)
 		{
-			throw new InvalidOperationException($"Max total samples value: {max_total_samples} is smaller than samples * channels {samples * channels}");
+			throw new InvalidOperationException($"Frame size is smaller than header size, {frame_size} vs. {header_size}");
+		}
+		else if (num_slices > QOA_SLICES_PER_FRAME)
+		{
+			throw new InvalidOperationException($"Too many slices per frame, {num_slices} vs. {QOA_SLICES_PER_FRAME}");
+		}
+		else if (num_slices * channels > max_total_slices)
+		{
+			throw new InvalidOperationException($"Max total slices is too small: {max_total_slices} is smaller than num_slices * channels {num_slices * channels}");
 		}
 
 		/* Read the LMS state: 4 x 2 bytes history, 4 x 2 bytes weights per channel */

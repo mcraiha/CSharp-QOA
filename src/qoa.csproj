@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <PackageId>LibQOA</PackageId>
     <VersionPrefix>0.9.1</VersionPrefix>
     <Authors>Kaarlo Räihä</Authors>
-    <Description>Managed C# .NET (.NET 8 and .NET 10) library for QOA (Quite OK Audio) encoding and decoding</Description>
+    <Description>Managed C# .NET (.NET 10 and .NET 11) library for QOA (Quite OK Audio) encoding and decoding</Description>
     <IncludeSource>true</IncludeSource>
     <PackageProjectUrl>https://github.com/mcraiha/CSharp-QOA</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mcraiha/CSharp-QOA.git</RepositoryUrl>

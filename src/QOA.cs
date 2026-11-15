@@ -636,6 +636,7 @@ public sealed class QOA
 		short[] sample_data = new short[total_samples];
 
 		uint sample_index = 0;
+		uint frame_len = 0;
 
 		/* Decode all frames */
 		do 
@@ -650,11 +651,11 @@ public sealed class QOA
 				samplesPerFrame = total_samples;
 			}
 			Span<short> decodedOutputSpan = new Span<short>(sample_data, (int)(sample_index * qoa.channels), samplesPerFrame);
-			qoa_decode_frame(inputStream, qoa, decodedOutputSpan, out uint frame_len);
+			qoa_decode_frame(inputStream, qoa, decodedOutputSpan, out frame_len);
 
 			sample_index += frame_len;
 		} 
-		while (sample_index < qoa.samples);
+		while (frame_len == QOA_FRAME_LEN && sample_index < qoa.samples);
 
 		qoa.samples = sample_index;
 		return sample_data;

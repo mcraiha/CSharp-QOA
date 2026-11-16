@@ -8,16 +8,30 @@ namespace CliToolQOA;
 
 internal class Program
 {
-	static void Main(string[] args)
+	/// <summary>
+	/// Bold
+	/// </summary>
+	/// <remarks>From https://davidjones.sportronics.com.au/coding/ConsoleTextFormat-Formatting_Console_App_Text-coding.html</remarks>
+	private const string b = "\u001b[1m";
+
+	/// <summary>
+	/// Not Bold
+	/// </summary>
+	private const string _b = "\u001b[22m";
+
+	public static void Main(string[] args)
 	{
 		if (args.Length == 0)
 		{
 			PrintVersion();
 			Console.WriteLine("More parameters are needed!");
 			Console.WriteLine();
-			Console.WriteLine("1. Get QOA info: input.qoa");
-			Console.WriteLine("2. Convert WAV to QOA (lossy operation): input.wav output.qoa");
-			Console.WriteLine("3. Convert QOA to WAV: input.qoa output.wav");
+			Console.WriteLine("1. Get QOA info:");
+			Console.WriteLine($"{b}qoacli input.qoa{_b}");
+			Console.WriteLine("2. Convert WAV to QOA (lossy operation):");
+			Console.WriteLine($"{b}qoacli input.wav output.qoa{_b}");
+			Console.WriteLine("3. Convert QOA to WAV:");
+			Console.WriteLine($"{b}qoacli input.qoa output.wav{_b}");
 			return;
 		}
 
